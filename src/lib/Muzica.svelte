@@ -1,4 +1,5 @@
 <script context="module">
+    // @ts-ignore
     let MIDI=window.MIDI;
     MIDI.loadPlugin({
 		soundfontUrl: "https://gleitz.github.io/midi-js-soundfonts/FatBoy/",
@@ -15,54 +16,61 @@
 
 <script>
     // import { songs } from "./songs";
+    let isMobile=()=>/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let debug=(el)=>{
-        el.onpointerdown = (e) => {
-            type=e.type;
-            target=e.currentTarget;
-            timeStamp=e.timeStamp;
-            changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-            touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-        };
-        el.onpointermove = (e) => {
-            type=e.type;
-            target=e.currentTarget;
-            timeStamp=e.timeStamp;
-            changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-            touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-        };
-        el.onpointerup = (e) => {
-            type=e.type;
-            target=e.currentTarget;
-            timeStamp=e.timeStamp;
-            changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-            touches=[];
-        };
-        el.ontouchstart = (e) => {
-            type=e.type;
-            target=e.currentTarget;
-            timeStamp=e.timeStamp;
-            changedTouches=Array.from(e.changedTouches);
-            touches=Array.from(e.touches);
-        };
-        el.ontouchmove = (e) => {
-            type=e.type;
-            target=e.currentTarget;
-            timeStamp=e.timeStamp;
-            changedTouches=Array.from(e.changedTouches);
-            touches=Array.from(e.touches);
-        };
-        el.ontouchend = (e) => {
-            type=e.type;
-            target=e.currentTarget;
-            timeStamp=e.timeStamp;
-            changedTouches=Array.from(e.changedTouches);
-            touches=Array.from(e.touches);
-        };
+        if(!isMobile()){
+            el.onpointerdown = (e) => {
+                type=e.type;
+                target=e.currentTarget;
+                timeStamp=e.timeStamp;
+                changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+                touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+            };
+            el.onpointermove = (e) => {
+                type=e.type;
+                target=e.currentTarget;
+                timeStamp=e.timeStamp;
+                changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+                touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+            };
+            el.onpointerup = (e) => {
+                type=e.type;
+                target=e.currentTarget;
+                timeStamp=e.timeStamp;
+                changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+                touches=[];
+            };
+        }else{
+            el.ontouchstart = (e) => {
+                type=e.type;
+                target=e.currentTarget;
+                timeStamp=e.timeStamp;
+                changedTouches=Array.from(e.changedTouches);
+                touches=Array.from(e.touches);
+            };
+            el.ontouchmove = (e) => {
+                type=e.type;
+                target=e.currentTarget;
+                timeStamp=e.timeStamp;
+                changedTouches=Array.from(e.changedTouches);
+                touches=Array.from(e.touches);
+            };
+            el.ontouchend = (e) => {
+                type=e.type;
+                target=e.currentTarget;
+                timeStamp=e.timeStamp;
+                changedTouches=Array.from(e.changedTouches);
+                touches=Array.from(e.touches);
+            };
+        }
         return {
             destroy(){
                 el.ontouchstart=null;
                 el.ontouchmove=null;
                 el.ontouchend=null;
+                el.onpointerdown=null;
+                el.onpointermove=null;
+                el.onpointerup=null;
             }
         }
     }
@@ -92,54 +100,50 @@
         MIDI.noteOff(0, note, delay);
     }
     let noteToTouchId=new Map();
-    let touchIdToActiveNote=new Map();
+    let touchIdToNote=new Map();
     let touchIDToScale=new Map();
+
     $:{
         if(type=="touchstart" || type=="pointerdown"){
             //find the touch whose identifier is not in touchIdToActiveNote
-            let newTouch=touches.find(t=>!touchIdToActiveNote.has(t.identifier))|| touches[0];
+            let newTouch=touches.find(t=>!touchIdToNote.has(t.identifier))|| touches[0];
             let scale=scales[Math.floor(newTouch.clientY/innerHeight*scales.length)]
             let note=scale[Math.floor(newTouch.clientX/innerWidth*scale.length)];
             noteOn(note);
-            touchIdToActiveNote.set(newTouch.identifier,note);
+            touchIdToNote.set(newTouch.identifier,note);
             touchIDToScale.set(newTouch.identifier,scale);
-            noteToTouchId.set(note,newTouch.identifier);
-            touchIdToActiveNote=touchIdToActiveNote;
-            noteToTouchId=noteToTouchId;
+            touchIdToNote=touchIdToNote;
         }
         if(type=="touchmove" || type=="pointermove"){
             //among the changed touches look for the ones that are in touchIdToActiveNote
-            let activeTouches=changedTouches.filter(t=>touchIdToActiveNote.has(t.identifier));
+            let activeTouches=touches.filter(t=>touchIdToNote.has(t.identifier));
             activeTouches.forEach(t=>{
                 let prevScale=touchIDToScale.get(t.identifier);
-                let note=touchIdToActiveNote.get(t.identifier);
+                let note=touchIdToNote.get(t.identifier);
                 let scale=scales[Math.floor(t.clientY/innerHeight*scales.length)]
                 let newNote=scale[Math.floor(t.clientX/innerWidth*scale.length)];
                 if(note!=newNote || scale!=prevScale){
                     noteOff(note);
                     noteOn(newNote);
-                    touchIdToActiveNote.set(t.identifier,newNote);
+                    touchIdToNote.set(t.identifier,newNote);
                     touchIDToScale.set(t.identifier,scale);
-                    noteToTouchId.delete(note);
-                    noteToTouchId.set(newNote,t.identifier);
-                    touchIdToActiveNote=touchIdToActiveNote;
-                    noteToTouchId=noteToTouchId;
+                    touchIdToNote=touchIdToNote;
                 }
             })
 
         }
         if(type=="touchend" || type=="pointerup"){
-            let note=touchIdToActiveNote.get(changedTouches[0].identifier);
+            let note=touchIdToNote.get(changedTouches[0].identifier);
             noteOff(note);
-            touchIdToActiveNote.delete(changedTouches[0].identifier);
+            touchIdToNote.delete(changedTouches[0].identifier);
             touchIDToScale.delete(changedTouches[0].identifier);
-            noteToTouchId.delete(note);
-            touchIdToActiveNote=touchIdToActiveNote;
-            noteToTouchId=noteToTouchId;
+            touchIdToNote=touchIdToNote;
         }
-        console.log(mapEntriesToString(touchIdToActiveNote));
+        console.log(mapEntriesToString(touchIdToNote));
     }
-
+    $:{
+        noteToTouchId= new Map(Array.from(touchIdToNote.entries()).map(([k,v])=>[v,k]));
+    }
     function mapEntriesToString(entries) {
     return Array
         .from(entries, ([k, v]) => `\n  ${k}: ${v}`)
@@ -162,7 +166,7 @@
                 </span>,
             {/each}
             <br/>
-            touchIDToNote:{mapEntriesToString(touchIdToActiveNote)}<br/>
+            touchIdToNote:{mapEntriesToString(touchIdToNote)}<br/>
             noteToTouchId:{mapEntriesToString(noteToTouchId)}<br/>
         </span>
     {/if}
