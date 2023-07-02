@@ -17,144 +17,151 @@
 <script>
     // import { songs } from "./songs";
     let isMobile=()=>/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let debug=(el)=>{
-        if(!isMobile()){
-            el.onpointerdown = (e) => {
-                type=e.type;
-                target=e.currentTarget;
-                timeStamp=e.timeStamp;
-                changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-                touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-            };
-            el.onpointermove = (e) => {
-                type=e.type;
-                target=e.currentTarget;
-                timeStamp=e.timeStamp;
-                changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-                touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-            };
-            el.onpointerup = (e) => {
-                type=e.type;
-                target=e.currentTarget;
-                timeStamp=e.timeStamp;
-                changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
-                touches=[];
-            };
-        }else{
-            el.ontouchstart = (e) => {
-                type=e.type;
-                target=e.currentTarget;
-                timeStamp=e.timeStamp;
-                changedTouches=Array.from(e.changedTouches);
-                touches=Array.from(e.touches);
-            };
-            el.ontouchmove = (e) => {
-                type=e.type;
-                target=e.currentTarget;
-                timeStamp=e.timeStamp;
-                changedTouches=Array.from(e.changedTouches);
-                touches=Array.from(e.touches);
-            };
-            el.ontouchend = (e) => {
-                type=e.type;
-                target=e.currentTarget;
-                timeStamp=e.timeStamp;
-                changedTouches=Array.from(e.changedTouches);
-                touches=Array.from(e.touches);
-            };
+    let touchHandlers=(el)=>{
+        let handleTouchEvents=(e)=>{
+            type=e.type;
+            target=e.currentTarget;
+            timeStamp=e.timeStamp;
+            changedTouches=Array.from(e.changedTouches);
+            touches=Array.from(e.touches);
         }
+        let handlePointerEventsEngage=(e)=>{
+            type=e.type;
+            target=e.currentTarget;
+            timeStamp=e.timeStamp;
+            changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+            touches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+        }
+        let handlePointerEventsRelease=(e)=>{
+            type=e.type;
+            target=e.currentTarget;
+            timeStamp=e.timeStamp;
+            changedTouches=[{identifier:0,clientX:e.clientX,clientY:e.clientY}];
+            touches=[];
+        }
+
+        if(!isMobile()){
+            el.addEventListener("pointerdown",handlePointerEventsEngage);
+            el.addEventListener("pointermove",handlePointerEventsEngage);
+            el.addEventListener("pointerup",handlePointerEventsRelease);
+            el.addEventListener("pointercancel",handlePointerEventsRelease);
+            return {
+                destroy(){
+                    el.removeEventListener("pointerdown",handlePointerEventsEngage);
+                    el.removeEventListener("pointermove",handlePointerEventsEngage);
+                    el.removeEventListener("pointerup",handlePointerEventsRelease);
+                    el.removeEventListener("pointercancel",handlePointerEventsRelease);
+                }
+            }
+        }
+        el.addEventListener("touchstart",handleTouchEvents);
+        el.addEventListener("touchmove",handleTouchEvents);
+        el.addEventListener("touchend",handleTouchEvents);
+        el.addEventListener("touchcancel",handleTouchEvents);
         return {
             destroy(){
-                el.ontouchstart=null;
-                el.ontouchmove=null;
-                el.ontouchend=null;
-                el.onpointerdown=null;
-                el.onpointermove=null;
-                el.onpointerup=null;
+                el.removeEventListener("touchstart",handleTouchEvents);
+                el.removeEventListener("touchmove",handleTouchEvents);
+                el.removeEventListener("touchend",handleTouchEvents);
+                el.removeEventListener("touchcancel",handleTouchEvents);
             }
         }
     }
-    //debug info
+
+    //debugging
     let showDebug=true;
+    //debug info
     let type="";
     let target="";
     let timeStamp=0;
+
+    //touch info
     let changedTouches=[];
     let touches=[];
 
+    let active=new Map();
+
+    export let layout=[];
+    let rows=[[],...layout];
+    console.log("rows",rows);
+
+    //MIDI helpers
     let noteToKey=(note)=>{
+        if(Array.isArray(note))
+            return note.map(noteToKey).join(",");
         let octave=Math.floor(note/12);
         let noteName=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][note%12];
         return noteName+octave;
     }
-    let augmented=[48,52,56,60];
-    let blues=[48,51,53,54,55,58,60];
-    let pentatonic=[48,50,52,55,57,60];
-    let minor=[48,50,51,53,55,56,58,60];
-    let major=[48,50,52,53,55,57,59,60];
-    let scales=[[],augmented,pentatonic,blues,minor,major];
-    let noteOn=(note)=>{
-        MIDI.noteOn(0, note, 120,0);
+    let playNote=(note)=>{
+        if (Array.isArray(note))
+            MIDI.chordOn(0, note, 120, 0);
+        else
+            MIDI.noteOn(0, note, 127, 0);
     }
-    let noteOff=(note,delay)=>{
-        MIDI.noteOff(0, note, delay);
+    let stopNote=(note)=>{
+        if (Array.isArray(note))
+            MIDI.chordOff(0, note, 0);
+        else
+            MIDI.noteOff(0, note, 0);
     }
-    let noteToTouchId=new Map();
-    let touchIdToNote=new Map();
-    let touchIDToScale=new Map();
 
+    //layout helpers
+    let getRowColAndNote=(x,y)=>{
+        let rowNo=Math.floor(y/innerHeight*rows.length);
+        let row=rows[rowNo];
+        let colNo=Math.floor(x/innerWidth*row.length);
+        return [rowNo,colNo,row[colNo]];
+    }
+
+    //event handlers
+    let noteOn=(x,y,id)=>{
+        // console.log("noteOn",x,y,id);
+        let [rowNo,colNo,note]=getRowColAndNote(x,y);
+        playNote(note);
+        active.set(id,{rowNo,colNo,note});
+        active=active;
+    }
+    let noteReplace=(x,y,id)=>{
+        // console.log("noteReplace",x,y,id);
+        let [rowNo,colNo,note]=getRowColAndNote(x,y);
+        if(active.has(id)){
+            let {rowNo:oldRowNo,colNo:oldColNo,note:oldNote}=active.get(id);
+            if(rowNo!=oldRowNo || colNo!=oldColNo){
+                stopNote(oldNote);
+                playNote(note);
+            }
+        }else{
+            playNote(note);
+        }
+        active.set(id,{rowNo,colNo,note});
+        active=active;
+    }
+    let noteOff=(id)=>{
+        // console.log("noteOff",id);
+        let value=active.get(id);
+        if(!value)return;
+        let {rowNo,colNo,note}=value;
+        stopNote(note);
+        active.delete(id);
+        active=active;
+    }
     $:{
         if(type=="touchstart" || type=="pointerdown"){
-            //find the touch whose identifier is not in touchIdToActiveNote
-            let newTouch=touches.find(t=>!touchIdToNote.has(t.identifier))|| touches[0];
-            let scale=scales[Math.floor(newTouch.clientY/innerHeight*scales.length)]
-            let note=scale[Math.floor(newTouch.clientX/innerWidth*scale.length)];
-            noteOn(note);
-            touchIdToNote.set(newTouch.identifier,note);
-            touchIDToScale.set(newTouch.identifier,scale);
-            touchIdToNote=touchIdToNote;
+            changedTouches.forEach(t=>noteOn(t.clientX,t.clientY,t.identifier));
         }
         if(type=="touchmove" || type=="pointermove"){
-            //among the changed touches look for the ones that are in touchIdToActiveNote
-            let activeTouches=touches.filter(t=>touchIdToNote.has(t.identifier));
-            activeTouches.forEach(t=>{
-                let prevScale=touchIDToScale.get(t.identifier);
-                let note=touchIdToNote.get(t.identifier);
-                let scale=scales[Math.floor(t.clientY/innerHeight*scales.length)]
-                let newNote=scale[Math.floor(t.clientX/innerWidth*scale.length)];
-                if(note!=newNote || scale!=prevScale){
-                    noteOff(note);
-                    noteOn(newNote);
-                    touchIdToNote.set(t.identifier,newNote);
-                    touchIDToScale.set(t.identifier,scale);
-                    touchIdToNote=touchIdToNote;
-                }
-            })
-
+            changedTouches.forEach(t=>noteReplace(t.clientX,t.clientY,t.identifier));
         }
         if(type=="touchend" || type=="pointerup"){
-            let note=touchIdToNote.get(changedTouches[0].identifier);
-            noteOff(note);
-            touchIdToNote.delete(changedTouches[0].identifier);
-            touchIDToScale.delete(changedTouches[0].identifier);
-            touchIdToNote=touchIdToNote;
+            changedTouches.forEach(t=>noteOff(t.identifier));
         }
-        console.log(mapEntriesToString(touchIdToNote));
-    }
-    $:{
-        noteToTouchId= new Map(Array.from(touchIdToNote.entries()).map(([k,v])=>[v,k]));
-    }
-    function mapEntriesToString(entries) {
-    return Array
-        .from(entries, ([k, v]) => `\n  ${k}: ${v}`)
-        .join(",") + "\n";
     }
 </script>
-
-<div class="debug" use:debug>
+<div class="debug" use:touchHandlers>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <span class="action" on:click={_=>{showDebug=!showDebug}}>[{showDebug?"close debug panel":"open debug panel"}]</span><br/>
     {#if showDebug}
+        <span class="action" on:pointerdown={_=>{showDebug=false}}>[hide]</span><br/>
         <span>
             timeStamp={(timeStamp/1000).toFixed(2)}<br/>
             <!-- target={JSON.stringify(target)}<br/> -->
@@ -164,20 +171,34 @@
                 <span class:active={changedTouches.map(t=>t.identifier).includes(touch.identifier)}>
                     {touch.identifier}:({touch.clientX.toFixed(0)} , {touch.clientY.toFixed(0)})
                 </span>,
+            {/each}<br/>
+            changedTouches:
+            {#each changedTouches as touch}
+                <span>
+                    {touch.identifier}:({touch.clientX.toFixed(0)} , {touch.clientY.toFixed(0)})
+                </span>,
             {/each}
             <br/>
-            touchIdToNote:{mapEntriesToString(touchIdToNote)}<br/>
-            noteToTouchId:{mapEntriesToString(noteToTouchId)}<br/>
+            active:<br/>
+            {#each Array.from(active.entries()) as entry}
+                {JSON.stringify(entry)}<br/>
+            {/each}
         </span>
+    {:else}
+        <span class="action" on:pointerdown={_=>{showDebug=true}}>[show]</span>
     {/if}
+        
 </div>
 
 <div class="piano">
-    {#each scales as scale}
-        <div class="scale">
-            {#each scale as note}
-                <div class="key" class:active={noteToTouchId.has(note)}>
-                    {noteToKey(note)}
+    {#each rows as row,i}
+        <div class="row">
+            {#each row as note,j}
+                <div class="key" 
+                class:same={Array.from(active.values()).some(({note:n})=>Array.isArray(n)?n.includes(note):n==note)}
+                class:active={Array.from(active.values()).some(({rowNo:r,colNo:c})=>r==i && c==j)}>
+                    {noteToKey(note)}<br/>
+                    {note}
                 </div>
             {/each}
         </div>
@@ -188,7 +209,10 @@
 
 <style>
     .action{
+        user-select: none;
         color: gold;
+        padding:0.5rem;
+        padding-right:4rem;
         font-size: 1rem;
     }
     .debug {
@@ -209,31 +233,43 @@
     }
     .piano{
         user-select: none;
+        pointer-events: none;
         position:absolute;
         inset:0;
         display:flex;
         flex-direction:column;
     }
-    .scale{
+    .row{
         /* uniform size */
         flex:1;
         display:flex;
         flex-direction:row;
     }
     .key{
-        flex:1;
+        flex:1 1 0px;
+        min-width: 0;
+        font-size:80%;
         display:flex;
         justify-content:center;
         align-items:center;
-        font-size:1.5rem;
+        
         font-weight:bold;
-        color:rgba(255, 255, 255, 0.5);
-        outline:1px solid rgba(255, 255, 255, 0.5);
+        color:rgba(255, 255, 255);
+        outline:1px solid rgba(255, 255, 255);
+        opacity: 0.5;
         transition: transform 0.1s ease-out;
+    }
+    .key.same{
+        color:goldenrod;
+        outline:1px solid goldenrod;
+        background-color: #222;
+        opacity: 0.8;
     }
     .key.active{
         color:gold;
         outline:1px solid gold;
+        background-color: #222;
         transform: scale(0.9);
+        opacity: 1;
     }
 </style>

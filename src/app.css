@@ -24,3 +24,30 @@ body {
   color:white;
   background:black;
 }
+
+.gradient-loop{
+  background: linear-gradient(90deg, gold  0%, brown 50%, gold 100%);
+  background-size: 200% 200%;
+  animation: gradient 4s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 0.5rem;
+}
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+a{
+  color: white;
+}
+a:hover{
+  color: gold;
+}
+a:active{
+  color: goldenrod;
+}
