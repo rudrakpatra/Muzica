@@ -84,13 +84,13 @@
       <p>Examples below</p>
       <ul>
         <li><a href="/">default</a></li>
-        <li><a href="/layout={JSON.stringify(defaultLayoutExtended)}">extended</a></li>
-        <li><a href="/layout={JSON.stringify([major(C4)])}" >Major</a></li>
-        <li><a href="/layout={JSON.stringify([minor(C4)])}" >Minor</a></li>
-        <li><a href="/layout={JSON.stringify([blues(C4)])}" >Blues</a></li>
-        <li><a href="/layout={JSON.stringify([penta(C4)])}" >Pentatonic</a></li>
-        <li><a href="/layout={JSON.stringify([augmented(C4)])}" >Augmented</a></li>
-        <li><a href="/layout={JSON.stringify([
+        <li><a href="/?layout={JSON.stringify(defaultLayoutExtended)}">extended</a></li>
+        <li><a href="/?layout={JSON.stringify([major(C4)])}" >Major</a></li>
+        <li><a href="/?layout={JSON.stringify([minor(C4)])}" >Minor</a></li>
+        <li><a href="/?layout={JSON.stringify([blues(C4)])}" >Blues</a></li>
+        <li><a href="/?layout={JSON.stringify([penta(C4)])}" >Pentatonic</a></li>
+        <li><a href="/?layout={JSON.stringify([augmented(C4)])}" >Augmented</a></li>
+        <li><a href="/?layout={JSON.stringify([
                 [M(C4+5),M(C4),M(C4-5),...major(C4+12),...major(C4+24)],
                 [m(A3+5),m(A3),m(A3-5),...major(A3+3),...major(A3+12+3)],
               ])}">complex</a>
