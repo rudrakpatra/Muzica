@@ -30,8 +30,8 @@
 
   let sharps=(x)=>[[],x+1,x+3,[],x+6,x+8,x+10,[],];
   let defaultLayout=[
-    sharps(C4),//sharps
-    major(C4)//C major
+    [...sharps(C4),[]],//sharps
+    [...major(C4),C5]//C major
   ]
 
   let defaultLayoutExtended=[

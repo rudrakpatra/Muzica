@@ -15,15 +15,21 @@
 </script>
 
 <script>
-    // import { songs } from "./songs";
     let isMobile=()=>/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let touchHandlers=(el)=>{
-        let handleTouchEvents=(e)=>{
+        let handleTouchEventsEngage=(e)=>{
             type=e.type;
             target=e.currentTarget;
             timeStamp=e.timeStamp;
             changedTouches=Array.from(e.changedTouches);
             touches=Array.from(e.touches);
+        }
+        let handleTouchEventsRelease=(e)=>{
+            type=e.type;
+            target=e.currentTarget;
+            timeStamp=e.timeStamp;
+            changedTouches=[...touches];
+            touches=[];
         }
         let handlePointerEventsEngage=(e)=>{
             type=e.type;
@@ -40,30 +46,30 @@
             touches=[];
         }
 
-        if(!isMobile()){
-            el.addEventListener("pointerdown",handlePointerEventsEngage);
-            el.addEventListener("pointermove",handlePointerEventsEngage);
-            el.addEventListener("pointerup",handlePointerEventsRelease);
-            el.addEventListener("pointercancel",handlePointerEventsRelease);
+        if(isMobile()){
+            el.addEventListener("touchstart",handleTouchEventsEngage);
+            el.addEventListener("touchmove",handleTouchEventsEngage);
+            el.addEventListener("touchend",handleTouchEventsEngage);
+            el.addEventListener("touchcancel",handleTouchEventsRelease);
             return {
                 destroy(){
-                    el.removeEventListener("pointerdown",handlePointerEventsEngage);
-                    el.removeEventListener("pointermove",handlePointerEventsEngage);
-                    el.removeEventListener("pointerup",handlePointerEventsRelease);
-                    el.removeEventListener("pointercancel",handlePointerEventsRelease);
+                    el.removeEventListener("touchstart",handleTouchEventsEngage);
+                    el.removeEventListener("touchmove",handleTouchEventsEngage);
+                    el.removeEventListener("touchend",handleTouchEventsEngage);
+                    el.removeEventListener("touchcancel",handleTouchEventsRelease);
                 }
             }
         }
-        el.addEventListener("touchstart",handleTouchEvents);
-        el.addEventListener("touchmove",handleTouchEvents);
-        el.addEventListener("touchend",handleTouchEvents);
-        el.addEventListener("touchcancel",handleTouchEvents);
+        el.addEventListener("pointerdown",handlePointerEventsEngage);
+        el.addEventListener("pointermove",handlePointerEventsEngage);
+        el.addEventListener("pointerup",handlePointerEventsRelease);
+        el.addEventListener("pointercancel",handlePointerEventsRelease);
         return {
             destroy(){
-                el.removeEventListener("touchstart",handleTouchEvents);
-                el.removeEventListener("touchmove",handleTouchEvents);
-                el.removeEventListener("touchend",handleTouchEvents);
-                el.removeEventListener("touchcancel",handleTouchEvents);
+                el.removeEventListener("pointerdown",handlePointerEventsEngage);
+                el.removeEventListener("pointermove",handlePointerEventsEngage);
+                el.removeEventListener("pointerup",handlePointerEventsRelease);
+                el.removeEventListener("pointercancel",handlePointerEventsRelease);
             }
         }
     }
@@ -154,6 +160,9 @@
             changedTouches.forEach(t=>noteReplace(t.clientX,t.clientY,t.identifier));
         }
         if(type=="touchend" || type=="pointerup"){
+            changedTouches.forEach(t=>noteOff(t.identifier));
+        }
+        if(type=="touchcancel" || type=="pointercancel"){
             changedTouches.forEach(t=>noteOff(t.identifier));
         }
     }
