@@ -43,27 +43,27 @@
 
   let bluesLayout=[
     [...blues(C5),...blues(C6)],
-    [...blues(C4),...blues(C5)]
+    [...blues(C3),...blues(C4)]
   ]
 
   let minorLayout=[
-    [...minor(C4),...minor(C5)],
-    [...minor(A3),...minor(A4)]
+    [...minor(C5),...minor(C6)],
+    [...minor(C3),...minor(C4)]
   ]
 
   let majorLayout=[
-    [...major(C4),...major(C5)],
-    [...major(A3),...major(A4)]
+    [...major(C5),...major(C6)],
+    [...major(C3),...major(C4)]
   ]
 
   let pentaLayout=[
-    [...penta(C4),...penta(C5)],
-    [...penta(A3),...penta(A4)]
+    [...penta(C5),...penta(C6)],
+    [...penta(C3),...penta(C4)]
   ]
 
   let augmentedLayout=[
-    [...augmented(C4),...augmented(C6)],
-    [...augmented(C4),...augmented(C5)]
+    [...augmented(C5),...augmented(C6)],
+    [...augmented(C3),...augmented(C4)]
   ]
   let complexLayout=[
     [M(C4-7),M(C4),M(C4-5),M(G4-5),...major(G5),...major(G6)],
