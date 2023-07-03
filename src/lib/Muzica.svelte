@@ -86,7 +86,6 @@
     let touches=[];
 
     let active=new Map();
-
     export let layout=[];
     let rows=[[],...layout];
     console.log("rows",rows);
@@ -166,6 +165,8 @@
             changedTouches.forEach(t=>noteOff(t.identifier));
         }
     }
+    $:activeNotesFlattened=Array.from(active.values()).map(v=>v.note).flat();
+    $:console.log("activeNotesFlattened",activeNotesFlattened);
 </script>
 <div class="debug" use:touchHandlers>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -203,12 +204,37 @@
     {#each rows as row,i}
         <div class="row">
             {#each row as note,j}
-                <div class="key" 
-                class:same={Array.from(active.values()).some(({note:n})=>Array.isArray(n)?n.includes(note):n==note)}
-                class:active={Array.from(active.values()).some(({rowNo:r,colNo:c})=>r==i && c==j)}>
-                    {noteToKey(note)}<br/>
-                    {note}
-                </div>
+                {#if Array.isArray(note)}
+                    <div class="key chord" 
+                    class:highlight={
+                        //for all notes in the chord the note is in activeNotesFlattened
+                        note.some(n=>activeNotesFlattened.some(a=>(a-n)%12==0))
+                    }
+                     class:active={
+                        //the note is in activeNotesFlattened
+                        note.every(n=>activeNotesFlattened.some(a=>a==n))
+                    }
+                    class:empty={
+                        //the chord is empty
+                        note.length==0
+                    }>
+                        {#each note as n}
+                           <span>{noteToKey(n)}|{n}</span>
+                        {/each}
+                    </div>
+                {:else}
+                    <div class="key" 
+                    class:highlight={
+                        //the note has same letter as some note in activeNotesFlattened
+                        activeNotesFlattened.some(n=>(n-note)%12==0)
+                    }
+                    class:active={
+                       //the note is in activeNotesFlattened
+                       activeNotesFlattened.some(n=>n==note)
+                    }>
+                        <span>{noteToKey(note)}|{note}</span>
+                    </div>
+                {/if}
             {/each}
         </div>
     {/each}
@@ -257,28 +283,32 @@
     .key{
         flex:1 1 0px;
         min-width: 0;
-        font-size:80%;
+        font-size:70%;
         display:flex;
+        flex-direction: column;
         justify-content:center;
         align-items:center;
+        gap:2px;
         
         font-weight:bold;
-        color:rgba(255, 255, 255);
-        outline:1px solid rgba(255, 255, 255);
-        opacity: 0.5;
+        color:rgba(255, 255, 255,0.8);
+        outline:1px solid rgba(255, 255, 255 ,0.4);
         transition: transform 0.1s ease-out;
     }
-    .key.same{
-        color:goldenrod;
-        outline:1px solid goldenrod;
-        background-color: #222;
-        opacity: 0.8;
+    .key.highlight{
+        color:hsla(43, 74%, 49%, 0.8);
+        outline-color:hsla(43, 74%, 49%, 0.5);
+        background-color: hsla(43, 74%, 49%, 0.1);
     }
     .key.active{
-        color:gold;
-        outline:1px solid gold;
-        background-color: #222;
+        color:hsl(51, 100%, 50%);
+        outline-color:hsl(51, 100%, 50%);
+        background-color: hsla(51, 100%, 50%, 0.2);
         transform: scale(0.9);
-        opacity: 1;
+    }
+    .chord.empty{
+        color:rgba(255, 255, 255,0.2);
+        outline-color:rgba(255, 255, 255 ,0.1);
+        background-color: rgba(255, 255, 255 ,0.1);
     }
 </style>

@@ -25,8 +25,10 @@
   let blues=(x)=>[x,x+3,x+5,x+6,x+7,x+10];
   let augmented=(x)=>[x,x+3,x+4,x+7,x+8,x+11];
 
-  let C4=48,C5=60;
-  let A3=45,A4=57;
+  let C3=36,C4=48,C5=60,C6=72;
+  let A3=45,A4=57,A5=69,A6=81;
+  let G3=43,G4=55,G5=67,G6=79;
+  let E3=40,E4=52,E5=64;
 
   let sharps=(x)=>[[],x+1,x+3,[],x+6,x+8,x+10,[],];
   let defaultLayout=[
@@ -34,11 +36,39 @@
     [...major(C4),C5]//C major
   ]
 
-  let defaultLayoutExtended=[
-    [...sharps(C4),...sharps(C5)],//sharps
-    [...major(C4),...major(C5)]//C major
+  let chromaticLayout=[
+    [...sharps(C4),...sharps(C5)],
+    [...major(C4),...major(C5)]
   ]
 
+  let bluesLayout=[
+    [...blues(C5),...blues(C6)],
+    [...blues(C4),...blues(C5)]
+  ]
+
+  let minorLayout=[
+    [...minor(C4),...minor(C5)],
+    [...minor(A3),...minor(A4)]
+  ]
+
+  let majorLayout=[
+    [...major(C4),...major(C5)],
+    [...major(A3),...major(A4)]
+  ]
+
+  let pentaLayout=[
+    [...penta(C4),...penta(C5)],
+    [...penta(A3),...penta(A4)]
+  ]
+
+  let augmentedLayout=[
+    [...augmented(C4),...augmented(C6)],
+    [...augmented(C4),...augmented(C5)]
+  ]
+  let complexLayout=[
+    [M(C4-7),M(C4),M(C4-5),M(G4-5),...major(G5),...major(G6)],
+    [m(A3-7),m(A3),m(A3-5),m(E4-5),...major(C5),...major(C6)],
+  ]
   //get the address of the current page
   let url = window.location.href;
   //find the part after layout=
@@ -76,24 +106,21 @@
       <button on:click={handleClick}>Play Default Layout</button>
       <div class="customize">
         <h2>How to customize the layout</h2>
-        <div>Add this to the page link <pre class="layout">/layout=[[[48,52,55],51,52,53,54,55]]</pre></div>
+        <div>Add this to the page link <pre class="layout">?/layout=[[[48,52,55],51,52,53,54,55]]</pre></div>
         <div>e.g. 48 is C4, 49 is C#5 an so on.</div>
       </div>
     {/if}
       <hr/>
       <p>Examples below</p>
       <ul>
-        <li><a href="/">default</a></li>
-        <li><a href="/?layout={JSON.stringify(defaultLayoutExtended)}">extended</a></li>
-        <li><a href="/?layout={JSON.stringify([major(C4)])}" >Major</a></li>
-        <li><a href="/?layout={JSON.stringify([minor(C4)])}" >Minor</a></li>
-        <li><a href="/?layout={JSON.stringify([blues(C4)])}" >Blues</a></li>
-        <li><a href="/?layout={JSON.stringify([penta(C4)])}" >Pentatonic</a></li>
-        <li><a href="/?layout={JSON.stringify([augmented(C4)])}" >Augmented</a></li>
-        <li><a href="/?layout={JSON.stringify([
-                [M(C4+5),M(C4),M(C4-5),...major(C4+12),...major(C4+24)],
-                [m(A3+5),m(A3),m(A3-5),...major(A3+3),...major(A3+12+3)],
-              ])}">complex</a>
+        <li><a href="/">default (Chromatic)</a></li>
+        <li><a href="/?layout={JSON.stringify(chromaticLayout)}">Chromatic</a></li>
+        <li><a href="/?layout={JSON.stringify(majorLayout)}" >C Major</a></li>
+        <li><a href="/?layout={JSON.stringify(minorLayout)}" >C Minor</a></li>
+        <li><a href="/?layout={JSON.stringify(bluesLayout)}" >C Blues</a></li>
+        <li><a href="/?layout={JSON.stringify(pentaLayout)}" >C Pentatonic</a></li>
+        <li><a href="/?layout={JSON.stringify(augmentedLayout)}" >C Augmented</a></li>
+        <li><a href="/?layout={JSON.stringify(complexLayout)}">C Major-complex</a>
         </li>
       </ul>
   </div>
@@ -101,9 +128,14 @@
 <style>
   .fs-prompt{
     height:100%;
-    padding:20px;
-    overflow-y: scroll;
+    overflow-y: auto;
     text-align: center;
+  }
+  .fs-prompt>*:first-child{
+    margin-top: 2rem;
+  }
+  .fs-prompt>*:last-child{
+    margin-bottom: 2rem;
   }
   button{
     margin:auto;
@@ -134,6 +166,7 @@
   }
   hr{
     opacity: 0.5;
+    margin: 1rem 0;
   }
   .customize{
     font-size: 80%;
