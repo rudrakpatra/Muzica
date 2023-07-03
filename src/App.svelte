@@ -120,7 +120,7 @@
         <li><a href="/?layout={JSON.stringify(bluesLayout)}" >C Blues</a></li>
         <li><a href="/?layout={JSON.stringify(pentaLayout)}" >C Pentatonic</a></li>
         <li><a href="/?layout={JSON.stringify(augmentedLayout)}" >C Augmented</a></li>
-        <li><a href="/?layout={JSON.stringify(complexLayout)}">C Major-complex</a>
+        <li><a href="/?layout={JSON.stringify(complexLayout)}">C&G Major </a>
         </li>
       </ul>
   </div>
